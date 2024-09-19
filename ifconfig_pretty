@@ -1,0 +1,20 @@
+#!/bin/python
+import subprocess
+from pyparsing import *
+import sys
+
+input_lines = subprocess.check_output(['ifconfig'], stderr=subprocess.DEVNULL).decode('utf-8')
+
+network_name = Word(alphanums) + Suppress(":") + Suppress("flag")
+dot = Suppress(".")
+ip_address = nums + dot + nums + dot + nums + dot + nums
+network_ip_address = Suppress("inet") + Word(nums+".")
+mask_ip_address = Suppress("netmask") + Word(nums+".")
+
+tree = list((network_name | network_ip_address | mask_ip_address).scan_string(input_lines))
+tree = zip(tree[0::3], tree[1::3], tree[2::3])
+
+for name, ip, mask in tree:
+    sys.stdout.write(f"Interface: {name[0][0]}\n\tAddress: {ip[0][0]}\n\tMask: {mask[0][0]}\n")
+
+sys.stdout.flush()
